@@ -1,0 +1,61 @@
+#!/bin/bash
+
+
+#Usage: organiseseries [Path of directory containing files] [Path of directory containing the folders]
+#
+#Created for HS animes!, therefore format that works is: [whatever] Name of Show - 01 (doesn't matter
+#if there is anything else after the episode number). In the format from above, it gets rid of the []
+#part, and whatever is after the -. Then creates a folder with Name_of_Show (or uses an existing one),
+#and moves the current file into the folder. (change where --> to fit your file name format)
+#
+#Author: Nandemonogatari
+
+
+#Main variables
+FilesDir=$1
+FILES="${FilesDir}*"
+DIR=$2
+
+if [ "$(ls -A $FilesDir)" ]
+  then
+    for f in $FILES
+      do
+        echo "processing $f"
+        #replace spaces with underscores and rename file
+        name1=${f//[[:blank:]]/_}
+        mv "$f" "$name1"
+        if [ $? -eq 0 ]
+          then
+            echo "renamed correctly"
+        else
+          echo "name already has correct format"
+        fi
+#-->    striping name of everything except show name (gets rid of [] and -... part)
+        name2=${name1#*]_}
+        name=${name2%_-*}
+        #Looking if there's an existing folder already
+        if [ -e "$DIR$name" ]
+          then
+            #move into folder
+            mv $name1 "$DIR$name"
+            if [ $? -eq 0 ]
+              then
+                echo "moved $name into respective folder"
+            fi
+        else
+          #create folder and move file into it
+          mkdir "$DIR$name"
+          if [ $? -eq 0 ]
+            then
+              echo "created directory for $name"
+          fi
+          mv $name1 "$DIR$name"
+          if [ $? -eq 0 ]
+            then
+              echo "moved $name into created folder"
+          fi
+        fi
+    done
+else
+  echo "Nothing to do"
+fi

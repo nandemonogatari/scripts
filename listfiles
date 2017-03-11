@@ -1,0 +1,92 @@
+#!/bin/bash
+
+##Usage: listfiles [FullPathToDirectory] [FullPathToDocument]
+##
+##Gets all the names of the files in a directory, and writes them into an existing document, or creates one to then write in. May be useful, may not, whatever...
+##
+##Auth: Nandemonogatari
+
+
+##Variable paradise##
+FilesDir=$1
+DIR="${FilesDir}*"
+files=($DIR)
+AmountOfFiles=${#files[@]}
+echo "Files in folder: $AmountOfFiles"
+document=$2
+n=0
+z=0
+w=0
+
+if [ "$(ls -A $FilesDir)" ]
+  then
+    if [ -e $document ] #check if document already exists
+      then
+        if [ -s $document ]  #in case it's existing, check if empty
+          then
+            c=0
+            while read line  #goes through all the lines of the file specified next to the done
+             do
+               text[$c]=$line  #add line to array
+               let "c = $c + 1"  #count the go
+            done < $document  #tells the while which file to read
+            AmountOfLines=${#text[@]}  #for later
+            for t in $DIR  #goes through all files in DIR
+              do
+                name=${t##/*/}  #stripping name of path
+                s=1
+                for l in "${text[@]}"  #go through all lines of text
+                  do
+                    if [ "$l" == "$name" ] #check if file is already listed in document
+                      then
+                        let "z = $z + 1"  #count already written
+                        break
+                    elif [ $AmountOfLines -eq $s ]  #to check when the last line is being processed
+                      then
+                        echo "$name" >> "$document"  #writes file to document
+                        if [ $? -eq 0 ]  #looks if last command failed (1)
+                          then
+                            let "n = $n + 1"  #counts successful write
+                        else
+                          let "w = $w + 1"  #counts failed write
+                        fi
+                    else
+                      let "s = $s + 1" #one line done
+                    fi
+                done
+            done
+        else
+          for t in $DIR  #same
+            do
+              name=${t##/*/}
+              echo "$name" >> "$document"
+              if [ $? -eq 0 ]
+                then
+                  let "n = $n + 1"
+                else
+                  let "w = $w + 1"
+              fi
+          done
+        fi
+    else
+      touch "$document"  #create document if it's nonexistent
+        if [ $? -eq 0 ]
+          then
+            echo "Created $document"
+        fi
+      for t in $DIR  #same
+        do
+          name=${t##/*/}
+          echo "$name" >> "$document"
+          if [ $? -eq 0 ]
+            then
+              let "n = $n +1"
+            else
+              let "w = $w +1"
+          fi
+      done
+    fi
+    echo "$n out of $AmountOfFiles were written, $z were already listed, $w failed to write"
+else
+  echo "$DIR is empty"
+fi
